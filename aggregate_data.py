@@ -58,8 +58,8 @@ for label in LABELS:
     # Reset index and forward-fill fully missing rows
     merged = merged.reset_index().rename(columns={"timestamp": "datetime"})
     sensor_cols = [col for col in merged.columns if col.startswith(('acc_', 'linacc_', 'gyr_', 'mag_'))]
-    fill_mask = merged[sensor_cols].isna().all(axis=1)
-    merged.loc[fill_mask, sensor_cols] = merged[sensor_cols].ffill().loc[fill_mask]
+    sensor_nan_rows = merged[sensor_cols].isna().all(axis=1)
+    merged.loc[sensor_nan_rows, sensor_cols] = merged[sensor_cols].ffill().loc[sensor_nan_rows]
 
     # Save to separate file
     label_clean = label.lower()
