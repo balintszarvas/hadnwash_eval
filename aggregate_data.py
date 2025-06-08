@@ -4,6 +4,7 @@ from pathlib import Path
 
 # Initial setup
 BASE_PATH = Path("raw_data")
+OUTPUT_PATH = Path("aggregated_data")
 LABELS = ["One", "Two", "Three", "Four", "Five"]
 SENSORS = {
     "Accelerometer.csv": "acc_",
@@ -24,7 +25,7 @@ def load_and_aggregate_sensor(file_path, prefix, offset):
     if "Time (s)" not in df.columns:
         raise ValueError(f"'Time (s)' column not found in {file_path}")
 
-    # Add offset so time continues
+    # Add offset so time is continuous across labels
     df['timestamp'] = START_DATETIME + offset + pd.to_timedelta(df["Time (s)"], unit='s')
     df = df.set_index('timestamp')
     df = df.drop(columns=["Time (s)"])
@@ -50,18 +51,28 @@ for label in LABELS:
     # Merge sensors on timestamp
     merged = pd.concat(dfs, axis=1)
 
-    # Add label columns (one-hot encoded)
+    # Add one-hot encoded labels
     for lbl in LABELS:
         merged[f"label{lbl}"] = 1 if lbl == label else 0
 
-    # Add to final dataset
+    # Reset index and forward-fill fully missing rows
+    merged = merged.reset_index().rename(columns={"timestamp": "datetime"})
+    sensor_cols = [col for col in merged.columns if col.startswith(('acc_', 'linacc_', 'gyr_', 'mag_'))]
+    fill_mask = merged[sensor_cols].isna().all(axis=1)
+    merged.loc[fill_mask, sensor_cols] = merged[sensor_cols].ffill().loc[fill_mask]
+
+    # Save to separate file
+    label_clean = label.lower()
+    merged.to_csv(OUTPUT_PATH / f"{GRANULARITY}_label{label_clean}.csv", index=False)
+    print(f"Dataset saved as: {GRANULARITY}_label{label_clean}.csv")
+
+    # Collect for combined file
     all_data.append(merged)
 
-    # Update time offset for the next block
-    time_offset += pd.to_timedelta(duration, unit="s")
+    # Update offset
+    time_offset += pd.to_timedelta(duration, unit='s')
 
-# Save dataset
-final_df = pd.concat(all_data).reset_index()
-final_df = final_df.rename(columns={'timestamp': 'datetime'})
-final_df.to_csv(f"handwash_{GRANULARITY}.csv", index=False)
-print(f"Dataset saved as 'handwash_{GRANULARITY}.csv'")
+# Save combined dataset
+final_df = pd.concat(all_data)
+final_df.to_csv(OUTPUT_PATH / f"{GRANULARITY}_combined.csv", index=False)
+print(f"Combined dataset saved as: {GRANULARITY}_combined.csv")
