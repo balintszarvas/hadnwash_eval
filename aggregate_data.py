@@ -70,7 +70,8 @@ for label in LABELS:
     all_data.append(merged)
 
     # Update offset
-    time_offset += pd.to_timedelta(duration, unit='s')
+    granularity_timedelta = pd.to_timedelta(GRANULARITY)
+    time_offset += pd.to_timedelta(duration, unit='s') + granularity_timedelta
 
 # Save combined dataset
 final_df = pd.concat(all_data)
