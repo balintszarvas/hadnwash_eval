@@ -5,7 +5,9 @@ from pathlib import Path
 # Initial setup
 BASE_PATH = Path("raw_data")
 OUTPUT_PATH = Path("aggregated_data")
-LABELS = ["One", "Two", "Three", "Four", "Five"]
+# LABELS = ["One", "Two", "Three", "Four", "Five"]
+LABEL_SCORE = {"One": 1, "Two": 2, "Three": 3, "Four": 4, "Five": 5}
+
 SENSORS = {
     "Accelerometer.csv": "acc_",
     "Linear Accelerometer.csv": "linacc_",
@@ -33,7 +35,7 @@ def load_and_aggregate_sensor(file_path, prefix, offset):
     return df.resample(GRANULARITY).mean()
 
 # Loop through each label and process sensors
-for label in LABELS:
+for label, score in LABEL_SCORE.items():
     print(f"Processing label: {label}")
     folder_path = BASE_PATH / label
     dfs = []
@@ -50,10 +52,11 @@ for label in LABELS:
 
     # Merge sensors on timestamp
     merged = pd.concat(dfs, axis=1)
+    merged["score"] = score
 
-    # Add one-hot encoded labels
-    for lbl in LABELS:
-        merged[f"label{lbl}"] = 1 if lbl == label else 0
+    # # Add one-hot encoded labels
+    # for lbl in LABELS:
+    #     merged[f"label{lbl}"] = 1 if lbl == label else 0
 
     # Reset index and forward-fill fully missing rows
     merged = merged.reset_index().rename(columns={"timestamp": "datetime"})
