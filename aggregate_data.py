@@ -6,8 +6,8 @@ from pathlib import Path
 BASE_PATH = Path("raw_data")
 OUTPUT_PATH = Path("aggregated_data")
 # LABELS = ["One", "Two", "Three", "Four", "Five"]
-LABEL_SCORE = {"One": 1, "Two": 2, "Three": 3, "Four": 4, "Five": 5}
-
+LABEL_SCORE = {"One": 1, "one_two":1, "Two": 2, "two_2": 2, "Three": 3, "three_2":3, "Four": 4, "four_2":4, "Five": 5, "five_2": 5}
+LABELS = list(LABEL_SCORE.keys())
 SENSORS = {
     "Accelerometer.csv": "acc_",
     "Linear Accelerometer.csv": "linacc_",
