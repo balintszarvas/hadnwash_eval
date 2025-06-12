@@ -4,9 +4,12 @@ from pathlib import Path
 
 # Initial setup
 BASE_PATH = Path("raw_data")
+# BASE_PATH = Path("raw_data") / "test" # TEST PATH
 OUTPUT_PATH = Path("aggregated_data")
 # LABELS = ["One", "Two", "Three", "Four", "Five"]
 LABEL_SCORE = {"One": 1, "one_two":1, "Two": 2, "two_2": 2, "Three": 3, "three_2":3, "Four": 4, "four_2":4, "Five": 5, "five_2": 5}
+# LABEL_SCORE = {"one_test": 1, "two_test": 2, "three_test": 3, "four_test": 4, "five_test": 5} # TEST LABELS
+
 LABELS = list(LABEL_SCORE.keys())
 SENSORS = {
     "Accelerometer.csv": "acc_",
@@ -78,5 +81,5 @@ for label, score in LABEL_SCORE.items():
 
 # Save combined dataset
 final_df = pd.concat(all_data)
-final_df.to_csv(OUTPUT_PATH / f"{GRANULARITY}_combined.csv", index=False)
+final_df.to_csv(OUTPUT_PATH / f"test_{GRANULARITY}_combined.csv", index=False)
 print(f"Combined dataset saved as: {GRANULARITY}_combined.csv")
