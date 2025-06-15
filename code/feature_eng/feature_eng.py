@@ -20,6 +20,7 @@ from Chapter4.TemporalAbstraction import NumericalAbstraction
 from Chapter4.TemporalAbstraction import CategoricalAbstraction
 from Chapter4.FrequencyAbstraction import FourierTransformation
 from Chapter4.TextAbstraction import TextAbstraction
+from Chapter3.DataTransformation import PrincipalComponentAnalysis
 
 # Read the result from the previous chapter, and make sure the index is of the type datetime.
 DATA_PATH = Path('./datasets/')
@@ -51,6 +52,13 @@ def calculate_jerk(dataset, time_interval):
     dataset.fillna(0, inplace=True) # otherwise when calculating the mean, std, etc. with .rolling() we get all NaN values
     return dataset
 
+def apply_pca(dataset):
+    PCA = PrincipalComponentAnalysis()
+    selected_predictor_cols = [c for c in dataset.columns if (not ('score' in c))]
+    n_pcs = 4  # Number of principal components to keep
+    dataset = PCA.apply_pca(copy.deepcopy(dataset), selected_predictor_cols, n_pcs)
+    return dataset
+
 def main():
     print_flags()
     
@@ -66,6 +74,7 @@ def main():
     time_interval = (dataset.index[1] - dataset.index[0]).total_seconds()  # Calculate time interval in seconds
     dataset = calculate_roll_pitch(dataset)
     dataset = calculate_jerk(dataset, time_interval)
+    dataset = apply_pca(dataset)
     DataViz = VisualizeDataset(__file__)
     # DataViz.plot_dataset(dataset, ['roll', 'pitch', 'jerk', 'score'], ['like', 'like', 'like', 'like'], ['line', 'line', 'line', 'points'], 'roll_pitch_jerk_distribution')
 
@@ -122,23 +131,32 @@ def main():
             'gyr_x', 'gyr_y', 'gyr_z',
             'mag_x', 'mag_y', 'mag_z',
             'roll', 'pitch',
-            'jerk_x', 'jerk_y', 'jerk_z', 'jerk_magnitude', 'score'
+            'jerk_x', 'jerk_y', 'jerk_z', 'jerk_magnitude', 'score',
+            'pca_1', 'pca_2', 'pca_3', 'pca_4'
         ]
         window_sizes = {"roll": int(float(5000)/milliseconds_per_instance),
                         "pitch": int(float(5000)/milliseconds_per_instance),
                         "jerk_x": int(float(2000)/milliseconds_per_instance),
                         "jerk_y": int(float(2000)/milliseconds_per_instance),
                         "jerk_z": int(float(2000)/milliseconds_per_instance),
-                        "jerk_magnitude": int(float(2000)/milliseconds_per_instance)}
+                        "jerk_magnitude": int(float(2000)/milliseconds_per_instance),
+                        "pca_1": int(float(5000)/milliseconds_per_instance),
+                        "pca_2": int(float(5000)/milliseconds_per_instance),
+                        "pca_3": int(float(5000)/milliseconds_per_instance),
+                        "pca_4": int(float(5000)/milliseconds_per_instance)}
         
         for feature, window in window_sizes.items():
             # print(f"Feature: {feature}, Window size: {window}")
             print(f"window size for {feature}: {window} instances")
-            dataset = NumAbs.abstract_numerical(dataset, [feature], window, 'mean')
-            dataset = NumAbs.abstract_numerical(dataset, [feature], window, 'max')
-            dataset = NumAbs.abstract_numerical(dataset, [feature], window, 'min')
-            dataset = NumAbs.abstract_numerical(dataset, [feature], window, 'range')
-            dataset = NumAbs.abstract_numerical(dataset, [feature], window, 'std')
+            if 'pca' in feature:
+                dataset = NumAbs.abstract_numerical(dataset, [feature], window, 'mean')
+                dataset = NumAbs.abstract_numerical(dataset, [feature], window, 'std')
+            else:
+                dataset = NumAbs.abstract_numerical(dataset, [feature], window, 'mean')
+                dataset = NumAbs.abstract_numerical(dataset, [feature], window, 'max')
+                dataset = NumAbs.abstract_numerical(dataset, [feature], window, 'min')
+                dataset = NumAbs.abstract_numerical(dataset, [feature], window, 'range')
+                dataset = NumAbs.abstract_numerical(dataset, [feature], window, 'std')
    
     #     DataViz.plot_dataset(dataset, ['acc_phone_x', 'gyr_phone_x', 'hr_watch_rate', 'light_phone_lux', 'mag_phone_x', 'press_phone_', 'pca_1', 'label'], ['like', 'like', 'like', 'like', 'like', 'like', 'like','like'], ['line', 'line', 'line', 'line', 'line', 'line', 'line', 'points'])
 
